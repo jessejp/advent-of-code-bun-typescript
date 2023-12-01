@@ -89,35 +89,27 @@ function getRowDigit(row: string) {
       digits.push({ digit: row[i], index: i });
     } else {
       const testDigit = isSpelledDigit(row[i], spelledDigit);
+
       if (testDigit) {
         spelledDigit += row[i];
-        if (
-          i === row.length - 1 &&
-          spelledOutDigits.findIndex((letters) => {
-            return (
-              letters === spelledDigit || letters === spelledDigit + row[i]
-            );
-          }) !== -1
-        ) {
-          digits.push({
-            digit: transformSpelledDigit(spelledDigit),
-            index: i - spelledDigit.length,
-          });
-        }
-      } else {
-        if (
-          spelledOutDigits.findIndex((letters) => {
-            return (
-              letters === spelledDigit || letters === spelledDigit + row[i]
-            );
-          }) !== -1
-        ) {
-          digits.push({
-            digit: transformSpelledDigit(spelledDigit),
-            index: i - spelledDigit.length,
-          });
-        }
-        spelledDigit = row[i];
+      }
+
+      const findSpelledDigit = spelledOutDigits.find(
+        (letters) => letters === spelledDigit
+      );
+
+      if (findSpelledDigit) {
+        digits.push({
+          digit: transformSpelledDigit(findSpelledDigit),
+          index: i - findSpelledDigit.length,
+        });
+      }
+
+      if (!testDigit) {
+        // ternary fix to "eighthree" edgecase
+        spelledDigit = isSpelledDigit(row[i - 1], "")
+          ? `${row[i - 1]}${row[i]}`
+          : row[i];
       }
     }
   }
@@ -153,14 +145,39 @@ function sumList(list: string[]) {
   return sum;
 }
 
-test("part 2 - example data calibration list sum to be 281", () => {
-  const calibrationList = getCalibrationDigitsList(exampleDataPart2);
-  console.log(calibrationList);
+const testData = [
+  "a2jgny5",
+  "twofgsm5zsyurdf",
+  "5rmhgmhooone",
+  "oneoneoneone",
+  "onemhfbhrx99",
+  "sixninefivejpqgkcx3sixnine15",
+  "jpxt9",
+  "eighthree", // supposed to be 83 not 88..
+  "sevenine", // supposed to be 79 not 77..
+  "oneight",
+];
 
+test("edgecases testData summed to be 475", () => {
+  expect(sumList(getCalibrationDigitsList(testData))).toBe(475);
+});
+
+test("calculates sum of first 3 indexes from calibration list to be 101", () => {
+  const calibrateList = getCalibrationDigitsList(testData);
+  expect(sumList(calibrateList.splice(0, 3))).toBe(101);
+});
+
+test("calculates sum of first 6 indexes from calibration list to be 196", () => {
+  const calibrateList = getCalibrationDigitsList(testData);
+  expect(sumList(calibrateList.splice(0, 6))).toBe(196);
+});
+
+test("part 2 example data calibration list summed = 281", () => {
+  const calibrationList = getCalibrationDigitsList(exampleDataPart2);
   expect(sumList(calibrationList)).toBe(281);
 });
 
-test("part 2 - example data first and last digit for two1nine is 2 & 9 ", () => {
+test("part 2 example data first and last digit for 'two1nine' are 2 and 9", () => {
   const row = "two1nine";
   const digits = getRowDigit(row);
 
@@ -168,40 +185,36 @@ test("part 2 - example data first and last digit for two1nine is 2 & 9 ", () => 
   expect(digits.lastDigit).toBe("9");
 });
 
-test("isSpelledDigit fn return true for: ", () => {
+test("isSpelledDigit fn ret true for 's', false for 'x' if passed empty string", () => {
   let currentWord = "";
   expect(isSpelledDigit("s", currentWord)).toBe(true);
   expect(isSpelledDigit("x", currentWord)).toBe(false);
 });
 
-test("isSpelledDigit fn return true for: eig", () => {
+test("isSpelledDigit fn ret true for 'h' after 'eig', false for 'a'", () => {
   let currentWord = "eig";
   expect(isSpelledDigit("h", currentWord)).toBe(true);
   expect(isSpelledDigit("a", currentWord)).toBe(false);
 });
 
-test("isSpelledDigit fn return true for: t", () => {
+test("isSpelledDigit fn ret true params: (w, t) | false: (r, t)", () => {
   let currentWord = "t";
   expect(isSpelledDigit("w", currentWord)).toBe(true);
   expect(isSpelledDigit("r", currentWord)).toBe(false);
 });
 
-test("exampleList is length of 4", () => {
-  expect(exampleDataPart1.length).toBe(4);
-});
-
-test("isANumber returns false for letter strings, true for num strings", () => {
+test("isANumber returns false for letter, true for number strings", () => {
   expect(isANumber("a")).toBe(false);
   expect(isANumber("2")).toBe(true);
 });
 
-test("first digit in string row asdf4gh6hj is 4, last is 6", () => {
+test("getRowDigit(asdf4gh6hj) returns {4, 6}", () => {
   const digits = getRowDigit("asdf4gh6hj");
   expect(digits.firstDigit).toBe("4");
   expect(digits.lastDigit).toBe("6");
 });
 
-test("if string contains only one digit, lastdigit = firstdigit", () => {
+test("when string contains only one digit, lastdigit = firstdigit", () => {
   const digits = getRowDigit("treb7uchet");
   expect(digits.firstDigit).toBe("7");
   expect(digits.lastDigit).toBe("7");
@@ -223,12 +236,7 @@ test("example data sum is 142", () => {
 
 test("answer for 2023/day 1", () => {
   const calibrationList = getCalibrationDigitsList(data);
-  console.log("answer =", sumList(calibrationList));
-  // part 1 = 54388;
-  // part 2 attempr 1 = 53410
-});
-
-test("answer for part 2 is less than 53410", () => {
-  const calibrationList = getCalibrationDigitsList(data);
-  expect(sumList(calibrationList)).toBeLessThan(53410);
+  const summedList = sumList(calibrationList);
+  console.log("answer =", summedList);
+  expect(summedList).toBe(53515);
 });
