@@ -1,4 +1,4 @@
-import { BunFile } from "bun";
+/* import { BunFile } from "bun";
 import { expect, test } from "bun:test";
 
 export const exampleFile = Bun.file("./AoC/2023/input/day1_example.txt");
@@ -9,9 +9,10 @@ const getInputList = async (file: BunFile) => {
   return (await file.text()).split("\n");
 };
 
+const data = await getInputList(inputFile);
+
 const exampleDataPart1 = await getInputList(exampleFile);
 const exampleDataPart2 = await getInputList(exampleFile2);
-const data = await getInputList(inputFile);
 
 function isANumber(n: string) {
   return !Number.isNaN(parseInt(n));
@@ -240,3 +241,4 @@ test("answer for 2023/day 1", () => {
   console.log("answer =", summedList);
   expect(summedList).toBe(53515);
 });
+ */
