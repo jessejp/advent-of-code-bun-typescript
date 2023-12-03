@@ -2,6 +2,7 @@ import { BunFile } from "bun";
 import { expect, test } from "bun:test";
 
 const exampleFile = Bun.file("./AoC/2023/input/day3_example.txt");
+const redditExampleFile = Bun.file("./AoC/2023/input/day3_reddit_example.txt");
 const inputFile = Bun.file("./AoC/2023/input/day3.txt");
 
 const getInputList = async (file: BunFile) => {
@@ -165,27 +166,31 @@ function getGearRatioList(gearParts: enginePart[], engineParts: enginePart[]) {
       );
     }
 
+    const createPartId = (part: enginePart) => {
+      return `${part.start}${part.end}${part.listIndex}${part.value}`;
+    };
+
     firstPart = engineParts.find((part) => matchingRules(gear, part));
+
+    if (firstPart === undefined) return;
+
+    const firstPartID = createPartId(firstPart);
+
     secondPart = engineParts.find(
-      (part) =>
-        matchingRules(gear, part) &&
-        part.start !== firstPart?.start &&
-        part.end !== firstPart?.end &&
-        part.value !== firstPart?.value
+      (part) => matchingRules(gear, part) && firstPartID !== createPartId(part)
     );
 
-    if (firstPart === undefined || secondPart === undefined) return;
+    if (secondPart === undefined) return;
 
-    if (
-      firstPart.start === secondPart.start &&
-      firstPart.end === secondPart.end &&
-      firstPart.listIndex === secondPart.listIndex &&
-      firstPart.value === secondPart.value
-    ) {
-      return;
-    } else {
-      gearRatios.push(parseInt(firstPart.value) * parseInt(secondPart.value));
-    }
+    // console.log("first part", firstPart);
+    // console.log("second part", secondPart);
+    // console.log(
+    //   "multiplied to: ",
+    //   parseInt(firstPart.value) * parseInt(secondPart.value)
+    // );
+    // console.log(" ");
+
+    gearRatios.push(parseInt(firstPart.value) * parseInt(secondPart.value));
   });
   return gearRatios;
 }
@@ -214,9 +219,10 @@ test("day 3 answer", async () => {
   // attempt 1 = 59 356 781 (too low)
   // attempt 2 = 62 309 374 (too low)
   // attempt 3 = 74 494 197 (too low)
+  // correct answer = 86 841 457 
 });
 
-test("day 3 example", async () => {
+/* test("day 3 example", async () => {
   const testList = await getInputList(exampleFile);
   const enginePartsList = getEnginePartList(testList, numberRegex);
 
@@ -226,10 +232,31 @@ test("day 3 example", async () => {
     (f) => f.relevant === true
   );
 
-  //   const sum = getAnswerSum(relevantEngineParts);
-  //   expect(sum).toBe(4361); // part 1
+  const sum = getPart1AnswerSum(relevantEngineParts);
+  expect(sum).toBe(4361); // part 1
 
   const gearPartsList = getEnginePartList(testList, gearRegex);
   const gearRatios = getGearRatioList(gearPartsList, relevantEngineParts);
   expect(getPart2AnswerSum(gearRatios)).toBe(467835);
+}); */
+
+test("day 3 reddit example data set", async () => {
+  const redditSample = await getInputList(redditExampleFile);
+
+  const getAllEnginePartsNextToSymbols = getEnginePartList(
+    redditSample,
+    numberRegex
+  );
+
+  const relevantEngineParts = getAllEnginePartsNextToSymbols.filter(
+    (f) => f.relevant === true
+  );
+  expect(getPart1AnswerSum(relevantEngineParts)).toBe(925);
+
+  const gearParts = getEnginePartList(redditSample, gearRegex, true);
+
+  const gearRatio = getGearRatioList(gearParts, relevantEngineParts);
+  console.log(gearRatio);
+
+  expect(getPart2AnswerSum(gearRatio)).toBe(6756);
 });
