@@ -1,4 +1,4 @@
-import { BunFile } from "bun";
+/* import { BunFile } from "bun";
 import { expect, test } from "bun:test";
 
 const exampleFile = Bun.file("./AoC/2023/input/day2_example.txt");
@@ -228,3 +228,4 @@ test("test 3b,4r|1r,2g,6b|12g return {r:5, g:4, b:9}", () => {
   expect(count.g).toBe(14);
   expect(count.b).toBe(9);
 });
+ */

@@ -4,6 +4,7 @@ import { expect, test } from "bun:test";
 export const exampleFile = Bun.file("./AoC/2023/input/day1_example.txt");
 export const exampleFile2 = Bun.file("./AoC/2023/input/day1_example_part2.txt");
 export const inputFile = Bun.file("./AoC/2023/input/day1.txt");
+export const tatuFile = Bun.file("./AoC/2023/input/tatu_input.txt");
 
 const getInputList = async (file: BunFile) => {
   return (await file.text()).split("\n");
@@ -159,6 +160,23 @@ const testData = [
   "oneight",
 ];
 
+test("Tatu answer for 2023/day 1", async () => {
+  const tatuData = await getInputList(tatuFile);
+  const calibrationList = getCalibrationDigitsList(tatuData);
+  console.log(calibrationList);
+  
+  const tatuSummedList = sumList(calibrationList);
+  console.log("Tatu answer =", tatuSummedList);
+});
+
+
+test("answer for 2023/day 1", () => {
+  const calibrationList = getCalibrationDigitsList(data);
+  const summedList = sumList(calibrationList);
+  console.log("answer =", summedList);
+  expect(summedList).toBe(53515);
+});
+
 test("edgecases testData summed to be 475", () => {
   expect(sumList(getCalibrationDigitsList(testData))).toBe(475);
 });
@@ -233,12 +251,5 @@ test("example data four digits are 12, 38, 15, 77", () => {
 test("example data sum is 142", () => {
   const calibrationList = getCalibrationDigitsList(exampleDataPart1);
   expect(sumList(calibrationList)).toBe(142);
-});
-
-test("answer for 2023/day 1", () => {
-  const calibrationList = getCalibrationDigitsList(data);
-  const summedList = sumList(calibrationList);
-  console.log("answer =", summedList);
-  expect(summedList).toBe(53515);
 });
  */
