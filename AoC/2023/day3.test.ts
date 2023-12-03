@@ -10,6 +10,7 @@ const getInputList = async (file: BunFile) => {
 
 const notNumberOrDotRegex: RegExp = /[^.0-9]/;
 const numberRegex: RegExp = /[0-9]/;
+const gearRegex: RegExp = /[*]/;
 
 type enginePart = {
   value: string;
@@ -19,7 +20,11 @@ type enginePart = {
   relevant: boolean;
 };
 
-function getEnginePartsOfRow(row: string, listIndex: number): enginePart[] {
+function getEnginePartsOfRow(
+  row: string,
+  listIndex: number,
+  regex: RegExp
+): enginePart[] {
   // solve one string
   const currentRow = row;
   let { value, start }: enginePart = {
@@ -35,7 +40,7 @@ function getEnginePartsOfRow(row: string, listIndex: number): enginePart[] {
   // get engine part number
   for (let i = 0; i <= currentRow.length; i++) {
     if (
-      (!numberRegex.test(currentRow[i]) && !!value) ||
+      (!regex.test(currentRow[i]) && !!value) ||
       (i === currentRow.length && !!value)
     ) {
       rowEngineParts.push({
@@ -48,7 +53,7 @@ function getEnginePartsOfRow(row: string, listIndex: number): enginePart[] {
     }
 
     // reset and skip
-    if (!numberRegex.test(currentRow[i])) {
+    if (!regex.test(currentRow[i])) {
       value = "";
       start = -1;
       continue;
@@ -61,19 +66,24 @@ function getEnginePartsOfRow(row: string, listIndex: number): enginePart[] {
   return rowEngineParts;
 }
 
-function getEnginePartList(list: string[]): enginePart[] {
+function getEnginePartList(
+  list: string[],
+  regex: RegExp,
+  isGearRatio: boolean = false
+): enginePart[] {
   const engineParts: enginePart[] = [];
 
   for (let i = 0; i < list.length; i++) {
     const currentRow = list[i];
-    if (!numberRegex.test(currentRow)) continue;
+    if (!regex.test(currentRow)) continue;
 
-    const rowEngineParts = getEnginePartsOfRow(currentRow, i);
+    const rowEngineParts = getEnginePartsOfRow(currentRow, i, regex);
     rowEngineParts.forEach((ep) => {
       ep.relevant = solveRelevancy(
         ep.start,
         ep.end,
-        list.slice(ep.listIndex === 0 ? 0 : ep.listIndex - 1, ep.listIndex + 2)
+        list.slice(ep.listIndex === 0 ? 0 : ep.listIndex - 1, ep.listIndex + 2),
+        isGearRatio
       );
       engineParts.push(ep);
     });
@@ -85,19 +95,24 @@ function getEnginePartList(list: string[]): enginePart[] {
 function solveRelevancy(
   start: number,
   end: number,
-  listSnippet: string[]
+  listSnippet: string[],
+  isGearRatio: boolean
 ): boolean {
+  const offset = {
+    start: isGearRatio ? start - 3 : start - 1,
+    end: isGearRatio ? end + 4 : end + 2,
+  };
   let block = "";
+  const nonClippingStartOffset = Math.max(0, offset.start);
 
-  //   console.log(" ");
+  console.log(" ");
   listSnippet.forEach((row) => {
-    const startOffset = Math.max(0, start - 1);
-    const area = row.slice(startOffset, end + 2);
+    const area = row.slice(nonClippingStartOffset, offset.end);
     block += area;
-    // console.log(area);
+    console.log(area);
   });
 
-  //   console.log("symbol in block?", notNumberOrDotRegex.test(block));
+  console.log("symbol in block?", notNumberOrDotRegex.test(block));
 
   return notNumberOrDotRegex.test(block);
 }
@@ -112,7 +127,8 @@ function getAnswerSum(list: enginePart[]) {
 
 test("day 3 part 1 answer", async () => {
   const rawList = await getInputList(inputFile);
-  const enginePartsList = getEnginePartList(rawList);
+  const enginePartsList = getEnginePartList(rawList, numberRegex);
+
   const answerPart1 = getAnswerSum(
     enginePartsList.filter((f) => f.relevant === true)
   );
@@ -122,11 +138,18 @@ test("day 3 part 1 answer", async () => {
 
 test("day 3 example", async () => {
   const testList = await getInputList(exampleFile);
-  const enginePartsList = getEnginePartList(testList);
+  /*   const enginePartsList = getEnginePartList(testList, numberRegex);
 
   //   console.log(enginePartsList);
 
-  const sum = getAnswerSum(enginePartsList.filter((f) => f.relevant === true));
+  const relevantEngineParts = enginePartsList.filter(
+    (f) => f.relevant === true
+  );
 
-  expect(sum).toBe(4361);
+  const sum = getAnswerSum(relevantEngineParts);
+
+  expect(sum).toBe(4361); // part 1
+ */
+  const gearPartsList = getEnginePartList(testList, gearRegex, true);
+  console.log(gearPartsList);
 });
