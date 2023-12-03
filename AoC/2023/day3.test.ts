@@ -96,28 +96,25 @@ function solveRelevancy(
   start: number,
   end: number,
   listSnippet: string[],
-  isGearRatio: boolean
+  isGearRatio: boolean = false
 ): boolean {
   const offset = {
-    start: isGearRatio ? start - 3 : start - 1,
-    end: isGearRatio ? end + 4 : end + 2,
+    start: start - 1,
+    end: end + 2,
   };
   let block = "";
   const nonClippingStartOffset = Math.max(0, offset.start);
-
-  console.log(" ");
   listSnippet.forEach((row) => {
     const area = row.slice(nonClippingStartOffset, offset.end);
     block += area;
-    console.log(area);
+    // console.log(area);
   });
+  //   console.log("symbol in block?", notNumberOrDotRegex.test(block));
 
-  console.log("symbol in block?", notNumberOrDotRegex.test(block));
-
-  return notNumberOrDotRegex.test(block);
+  return isGearRatio ? gearRegex.test(block) : notNumberOrDotRegex.test(block);
 }
 
-function getAnswerSum(list: enginePart[]) {
+function getPart1AnswerSum(list: enginePart[]) {
   let sum = 0;
   list.forEach((e) => {
     sum += parseInt(e.value);
@@ -125,20 +122,103 @@ function getAnswerSum(list: enginePart[]) {
   return sum;
 }
 
-test("day 3 part 1 answer", async () => {
+function getPart2AnswerSum(list: number[]) {
+  let sum = 0;
+  list.forEach((e) => {
+    sum += e;
+  });
+  return sum;
+}
+
+function getGearRatioList(gearParts: enginePart[], engineParts: enginePart[]) {
+  const gearRatios: number[] = [];
+
+  gearParts.forEach((gear) => {
+    let firstPart: enginePart | undefined = undefined;
+    let secondPart: enginePart | undefined = undefined;
+
+    function matchingRules(gear: enginePart, part: enginePart): boolean {
+      const diagonalMatchAbove =
+        part.listIndex === gear.listIndex - 1 &&
+        (part.end === gear.start - 1 || part.start === gear.end + 1);
+      const diagonalMatchBelow =
+        part.listIndex === gear.listIndex + 1 &&
+        (part.end === gear.start - 1 || part.start === gear.end + 1);
+      const horizontalMatch =
+        part.listIndex === gear.listIndex &&
+        (part.end === gear.start - 1 || part.start === gear.end + 1);
+      const verticalMatch =
+        (part.listIndex === gear.listIndex - 1 &&
+          (part.end === gear.start ||
+            part.start === gear.start ||
+            (part.start <= gear.start && part.end >= gear.end))) ||
+        (part.listIndex === gear.listIndex + 1 &&
+          (part.end === gear.start ||
+            part.start === gear.start ||
+            (part.start <= gear.start && part.end >= gear.end)));
+
+      return (
+        diagonalMatchAbove ||
+        diagonalMatchBelow ||
+        horizontalMatch ||
+        verticalMatch
+      );
+    }
+
+    firstPart = engineParts.find((part) => matchingRules(gear, part));
+    secondPart = engineParts.find(
+      (part) =>
+        matchingRules(gear, part) &&
+        part.start !== firstPart?.start &&
+        part.end !== firstPart?.end &&
+        part.value !== firstPart?.value
+    );
+
+    if (firstPart === undefined || secondPart === undefined) return;
+
+    if (
+      firstPart.start === secondPart.start &&
+      firstPart.end === secondPart.end &&
+      firstPart.listIndex === secondPart.listIndex &&
+      firstPart.value === secondPart.value
+    ) {
+      return;
+    } else {
+      gearRatios.push(parseInt(firstPart.value) * parseInt(secondPart.value));
+    }
+  });
+  return gearRatios;
+}
+
+test("day 3 answer", async () => {
   const rawList = await getInputList(inputFile);
   const enginePartsList = getEnginePartList(rawList, numberRegex);
-
-  const answerPart1 = getAnswerSum(
-    enginePartsList.filter((f) => f.relevant === true)
+  const filteredRelevantEngineParts = enginePartsList.filter(
+    (f) => f.relevant === true
   );
+  const answerPart1 = getPart1AnswerSum(filteredRelevantEngineParts);
   console.log("2023 aoc day 3 part 1 answer = ", answerPart1);
   // answer 1 = 559667
+
+  const enginePartsNearGearList = getEnginePartList(rawList, numberRegex, true);
+  const gearPartsList = getEnginePartList(rawList, gearRegex);
+
+  const gearRatioList = getGearRatioList(
+    gearPartsList,
+    enginePartsNearGearList
+  );
+
+  const answerPart2 = getPart2AnswerSum(gearRatioList);
+
+  console.log("2023 aoc day 3 part 2 answer = ", answerPart2);
+  // attempt 1 = 59 356 781 (too low)
+  // attempt 2 = 62 309 374 (too low)
+  // attempt 3 = 74 494 197 (too low)
 });
 
 test("day 3 example", async () => {
   const testList = await getInputList(exampleFile);
-  /*   const enginePartsList = getEnginePartList(testList, numberRegex);
+  const enginePartsList = getEnginePartList(testList, numberRegex);
 
   //   console.log(enginePartsList);
 
@@ -146,10 +226,10 @@ test("day 3 example", async () => {
     (f) => f.relevant === true
   );
 
-  const sum = getAnswerSum(relevantEngineParts);
+  //   const sum = getAnswerSum(relevantEngineParts);
+  //   expect(sum).toBe(4361); // part 1
 
-  expect(sum).toBe(4361); // part 1
- */
-  const gearPartsList = getEnginePartList(testList, gearRegex, true);
-  console.log(gearPartsList);
+  const gearPartsList = getEnginePartList(testList, gearRegex);
+  const gearRatios = getGearRatioList(gearPartsList, relevantEngineParts);
+  expect(getPart2AnswerSum(gearRatios)).toBe(467835);
 });
