@@ -2,7 +2,7 @@ import { BunFile } from "bun";
 import { expect, test } from "bun:test";
 
 const exampleFile = Bun.file("./AoC/2023/input/day5_example.txt");
-// const inputFile = Bun.file("./AoC/2023/input/day5.txt");
+const inputFile = Bun.file("./AoC/2023/input/day5.txt");
 
 type category =
   | "seed"
@@ -81,9 +81,11 @@ const findSchema = (
   destination: category,
   conversionMapList: conversionMap[]
 ) => {
-  return conversionMapList.find(
-    (map) => map.destinationName === destination && map.sourceName === source
-  )?.schemaList;
+  return (
+    conversionMapList.find(
+      (map) => map.destinationName === destination && map.sourceName === source
+    )?.schemaList || []
+  );
 };
 
 const solveDestination: (
@@ -92,39 +94,113 @@ const solveDestination: (
 ) => number = (source, schemaList) => {
   for (let i = 0; i < schemaList.length; i++) {
     const schema = schemaList[i];
-    const sourcesMap = [...Array(schema.range)].map(
-      (_, index) => schema.source + index
-    );
-    const destinationsMap = [...Array(schema.range)].map(
-      (_, index) => schema.destination + index
-    );
+    const sourcesMap = {
+      start: schema.source,
+      end: schema.source + schema.range - 1,
+    };
+    const destinationsMap = {
+      start: schema.destination,
+      end: schema.destination + schema.range - 1,
+    };
 
-    const destIndex = sourcesMap.findIndex((s) => s === source);
-    if (destIndex >= 0) {
-      return destinationsMap[destIndex];
+    const dest =
+      source >= sourcesMap.start && source <= sourcesMap.end
+        ? destinationsMap.start +
+          schema.range -
+          (sourcesMap.start + schema.range - source)
+        : -1;
+
+    if (dest >= 0) {
+      return dest;
     } else {
       continue;
-      //   return source;
     }
   }
   return source;
 };
 
+const getDestinationsList = (
+  source: number[],
+  schemaList: conversionSchema[]
+) => {
+  const destination: number[] = [];
+  source.forEach((s) => {
+    destination.push(solveDestination(s, schemaList));
+  });
+  return destination;
+};
+
+test("AoC 2023 day 5 answer", async () => {
+  const { seeds, conversionMaps } = await getInputList(inputFile);
+
+  const soilFromSeed = findSchema("seed", "soil", conversionMaps);
+  const soil = getDestinationsList(seeds, soilFromSeed);
+
+  const fertilizerFromSoil = findSchema("soil", "fertilizer", conversionMaps);
+  const fertilizer = getDestinationsList(soil, fertilizerFromSoil);
+
+  const waterFromFertilizer = findSchema("fertilizer", "water", conversionMaps);
+  const water = getDestinationsList(fertilizer, waterFromFertilizer);
+
+  const lightFromWater = findSchema("water", "light", conversionMaps);
+  const light = getDestinationsList(water, lightFromWater);
+
+  const tempFromLight = findSchema("light", "temperature", conversionMaps);
+  const temperature = getDestinationsList(light, tempFromLight);
+
+  const humidityFromTemp = findSchema(
+    "temperature",
+    "humidity",
+    conversionMaps
+  );
+  const humidity = getDestinationsList(temperature, humidityFromTemp);
+
+  const locFromHumidity = findSchema("humidity", "location", conversionMaps);
+  const location = getDestinationsList(humidity, locFromHumidity);
+
+  const lowestLocation = location.toSorted((a, b) => a - b)[0];
+  console.log("AoC 2023 Day 5 part 1 answer =", lowestLocation);
+});
+
 test("AoC 2023 day 5 example", async () => {
-  const almanac = await getInputList(exampleFile);
+  const { seeds, conversionMaps } = await getInputList(exampleFile);
 
-  const seedToSoil = findSchema("seed", "soil", almanac.conversionMaps);
+  const seedToSoil = findSchema("seed", "soil", conversionMaps);
 
-  console.log(seedToSoil);
-  const soil: number[] = [];
-  if (seedToSoil) {
-    almanac.seeds.forEach((s) => {
-      soil.push(solveDestination(s, seedToSoil));
-    });
-  }
+  const soil = getDestinationsList(seeds, seedToSoil);
 
   expect(soil[0]).toBe(81);
   expect(soil[1]).toBe(14);
   expect(soil[2]).toBe(57);
   expect(soil[3]).toBe(13);
+
+  const soilToFertilizer = findSchema("soil", "fertilizer", conversionMaps);
+
+  const fertilizer = getDestinationsList(soil, soilToFertilizer);
+  expect(fertilizer[0]).toBe(81);
+  expect(fertilizer[1]).toBe(53);
+  expect(fertilizer[2]).toBe(57);
+  expect(fertilizer[3]).toBe(52);
+
+  const fertilizerToWater = findSchema("fertilizer", "water", conversionMaps);
+
+  const water = getDestinationsList(fertilizer, fertilizerToWater);
+  const waterToLight = findSchema("water", "light", conversionMaps);
+  const light = getDestinationsList(water, waterToLight);
+  const lightToTemperature = findSchema("light", "temperature", conversionMaps);
+  const temperature = getDestinationsList(light, lightToTemperature);
+  const temperatureToHumidity = findSchema(
+    "temperature",
+    "humidity",
+    conversionMaps
+  );
+  const humidity = getDestinationsList(temperature, temperatureToHumidity);
+  const humidityToLocation = findSchema("humidity", "location", conversionMaps);
+  const location = getDestinationsList(humidity, humidityToLocation);
+  expect(location[0]).toBe(82);
+  expect(location[1]).toBe(43);
+  expect(location[2]).toBe(86);
+  expect(location[3]).toBe(35);
+  const lowestLocation = location.toSorted((a, b) => a - b)[0];
+  expect(lowestLocation).toBe(35);
 });
