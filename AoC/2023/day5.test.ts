@@ -130,42 +130,134 @@ const getDestinationsList = (
   return destination;
 };
 
-test("AoC 2023 day 5 answer", async () => {
-  const { seeds, conversionMaps } = await getInputList(inputFile);
+/* test("AoC 2023 day 5 part 2 answer", async () => {
+  const { seeds, conversionMaps: convMaps } = await getInputList(inputFile);
+  const soilFromSeed = findSchema("seed", "soil", convMaps);
+  const fertilizerFromSoil = findSchema("soil", "fertilizer", convMaps);
+  const waterFromFertilizer = findSchema("fertilizer", "water", convMaps);
+  const lightFromWater = findSchema("water", "light", convMaps);
+  const tempFromLight = findSchema("light", "temperature", convMaps);
+  const humidityFromTemp = findSchema("temperature", "humidity", convMaps);
+  const locFromHumidity = findSchema("humidity", "location", convMaps);
 
-  const soilFromSeed = findSchema("seed", "soil", conversionMaps);
+  const newSeedsRange: { start: seed; end: seed; totalSeeds: number }[] = [];
+
+  for (let i = 0; i < seeds.length; i = i + 2) {
+    newSeedsRange.push({
+      start: seeds[i],
+      end: seeds[i] + seeds[i + 1] - 1,
+      totalSeeds: seeds[i] + seeds[i + 1] - seeds[i],
+    });
+  }
+
+  console.log(newSeedsRange.slice(0, 1));
+
+  const locationsList: number[] = [];
+
+  [
+    {
+      start: 919339981,
+      end: 1481784610,
+      totalSeeds: 562444630,
+    },
+  ].forEach((seedSet) => {
+    for (let s = 0; s < seedSet.totalSeeds; s++) {
+      const soil = getDestinationsList([seedSet.start + s], soilFromSeed);
+      const fertilizer = getDestinationsList(soil, fertilizerFromSoil);
+      const water = getDestinationsList(fertilizer, waterFromFertilizer);
+      const light = getDestinationsList(water, lightFromWater);
+      const temperature = getDestinationsList(light, tempFromLight);
+      const humidity = getDestinationsList(temperature, humidityFromTemp);
+      const location = getDestinationsList(humidity, locFromHumidity);
+      locationsList.push(location[0]);
+    }
+  });
+  console.log(locationsList);
+
+  const lowestLocation = locationsList.toSorted((a, b) => a - b)[0];
+  console.log("answer to part 2 =", lowestLocation);
+}); */
+
+/* test("AoC 2023 day 5 answer", async () => {
+  const { seeds, conversionMaps: convMaps } = await getInputList(inputFile);
+
+  const soilFromSeed = findSchema("seed", "soil", convMaps);
   const soil = getDestinationsList(seeds, soilFromSeed);
 
-  const fertilizerFromSoil = findSchema("soil", "fertilizer", conversionMaps);
+  const fertilizerFromSoil = findSchema("soil", "fertilizer", convMaps);
   const fertilizer = getDestinationsList(soil, fertilizerFromSoil);
 
-  const waterFromFertilizer = findSchema("fertilizer", "water", conversionMaps);
+  const waterFromFertilizer = findSchema("fertilizer", "water", convMaps);
   const water = getDestinationsList(fertilizer, waterFromFertilizer);
 
-  const lightFromWater = findSchema("water", "light", conversionMaps);
+  const lightFromWater = findSchema("water", "light", convMaps);
   const light = getDestinationsList(water, lightFromWater);
 
-  const tempFromLight = findSchema("light", "temperature", conversionMaps);
+  const tempFromLight = findSchema("light", "temperature", convMaps);
   const temperature = getDestinationsList(light, tempFromLight);
 
-  const humidityFromTemp = findSchema(
-    "temperature",
-    "humidity",
-    conversionMaps
-  );
+  const humidityFromTemp = findSchema("temperature", "humidity", convMaps);
   const humidity = getDestinationsList(temperature, humidityFromTemp);
 
-  const locFromHumidity = findSchema("humidity", "location", conversionMaps);
+  const locFromHumidity = findSchema("humidity", "location", convMaps);
   const location = getDestinationsList(humidity, locFromHumidity);
 
   const lowestLocation = location.toSorted((a, b) => a - b)[0];
   console.log("AoC 2023 Day 5 part 1 answer =", lowestLocation);
+}); */
+
+test("AoC 2023 day 5 part 2 example", async () => {
+  const { seeds, conversionMaps: convMaps } = await getInputList(exampleFile);
+  const soilFromSeed = findSchema("seed", "soil", convMaps);
+  const fertilizerFromSoil = findSchema("soil", "fertilizer", convMaps);
+  const waterFromFertilizer = findSchema("fertilizer", "water", convMaps);
+  const lightFromWater = findSchema("water", "light", convMaps);
+  const tempFromLight = findSchema("light", "temperature", convMaps);
+  const humidityFromTemp = findSchema("temperature", "humidity", convMaps);
+  const locFromHumidity = findSchema("humidity", "location", convMaps);
+
+  const newSeedsRange: { start: seed; end: seed; totalSeeds: number }[] = [];
+
+  for (let i = 0; i < seeds.length; i = i + 2) {
+    newSeedsRange.push({
+      start: seeds[i],
+      end: seeds[i] + seeds[i + 1] - 1,
+      totalSeeds: seeds[i] + seeds[i + 1] - seeds[i],
+    });
+  }
+  console.log(
+    newSeedsRange[0].end,
+    "-",
+    newSeedsRange[0].start,
+    "=",
+    newSeedsRange[0].totalSeeds
+  );
+
+  expect(newSeedsRange[0].totalSeeds + newSeedsRange[1].totalSeeds).toBe(27);
+
+  const locationsList: number[] = [];
+
+  newSeedsRange.forEach((seedSet) => {
+    for (let s = 0; s < seedSet.totalSeeds; s++) {
+      const soil = getDestinationsList([seedSet.start + s], soilFromSeed);
+      const fertilizer = getDestinationsList(soil, fertilizerFromSoil);
+      const water = getDestinationsList(fertilizer, waterFromFertilizer);
+      const light = getDestinationsList(water, lightFromWater);
+      const temperature = getDestinationsList(light, tempFromLight);
+      const humidity = getDestinationsList(temperature, humidityFromTemp);
+      const location = getDestinationsList(humidity, locFromHumidity);
+      locationsList.push(location[0]);
+    }
+  });
+
+  const lowestLocation = locationsList.toSorted((a, b) => a - b)[0];
+  expect(lowestLocation).toBe(46);
 });
 
-test("AoC 2023 day 5 example", async () => {
-  const { seeds, conversionMaps } = await getInputList(exampleFile);
+/* test("AoC 2023 day 5 part1 example", async () => {
+  const { seeds, conversionMaps: convMaps } = await getInputList(exampleFile);
 
-  const seedToSoil = findSchema("seed", "soil", conversionMaps);
+  const seedToSoil = findSchema("seed", "soil", convMaps);
 
   const soil = getDestinationsList(seeds, seedToSoil);
 
@@ -174,7 +266,7 @@ test("AoC 2023 day 5 example", async () => {
   expect(soil[2]).toBe(57);
   expect(soil[3]).toBe(13);
 
-  const soilToFertilizer = findSchema("soil", "fertilizer", conversionMaps);
+  const soilToFertilizer = findSchema("soil", "fertilizer", convMaps);
 
   const fertilizer = getDestinationsList(soil, soilToFertilizer);
   expect(fertilizer[0]).toBe(81);
@@ -182,20 +274,20 @@ test("AoC 2023 day 5 example", async () => {
   expect(fertilizer[2]).toBe(57);
   expect(fertilizer[3]).toBe(52);
 
-  const fertilizerToWater = findSchema("fertilizer", "water", conversionMaps);
+  const fertilizerToWater = findSchema("fertilizer", "water", convMaps);
 
   const water = getDestinationsList(fertilizer, fertilizerToWater);
-  const waterToLight = findSchema("water", "light", conversionMaps);
+  const waterToLight = findSchema("water", "light", convMaps);
   const light = getDestinationsList(water, waterToLight);
-  const lightToTemperature = findSchema("light", "temperature", conversionMaps);
+  const lightToTemperature = findSchema("light", "temperature", convMaps);
   const temperature = getDestinationsList(light, lightToTemperature);
   const temperatureToHumidity = findSchema(
     "temperature",
     "humidity",
-    conversionMaps
+    convMaps
   );
   const humidity = getDestinationsList(temperature, temperatureToHumidity);
-  const humidityToLocation = findSchema("humidity", "location", conversionMaps);
+  const humidityToLocation = findSchema("humidity", "location", convMaps);
   const location = getDestinationsList(humidity, humidityToLocation);
   expect(location[0]).toBe(82);
   expect(location[1]).toBe(43);
@@ -203,4 +295,4 @@ test("AoC 2023 day 5 example", async () => {
   expect(location[3]).toBe(35);
   const lowestLocation = location.toSorted((a, b) => a - b)[0];
   expect(lowestLocation).toBe(35);
-});
+}); */
