@@ -2,6 +2,7 @@ import { BunFile } from "bun";
 import { expect, test } from "bun:test";
 
 const exampleFile = Bun.file("./AoC/2023/input/day7_example.txt");
+const exampleFileReddit = Bun.file("./AoC/2023/input/day7_example_reddit.txt");
 const inputFile = Bun.file("./AoC/2023/input/day7.txt");
 
 const getInputList = async (file: BunFile): Promise<CamelCardHand[]> => {
@@ -59,38 +60,41 @@ const getHandType = (hand: string): HandType => {
     if (parsedHand.length > 0 && parsedHand.indexOf(label) > -1) {
       switch (handStr) {
         case 1:
-          same += label;
           handStr = 2;
+          same += label;
           break;
         case 2:
           if (same.includes(label)) {
             handStr = 4; // Three of a kind
           } else {
-            handStr = 3;
+            handStr = 3; // Two pair
           }
           same += label;
           break;
         case 3:
-          handStr = 5; // full house
+          handStr = 5; // Full house
           same += label;
           break;
         case 4:
-          handStr = 6; // Four of a kind
+          if (!same.includes(label)) {
+            handStr = 5; // Full house
+          } else {
+            handStr = 6; // Four of a kind
+          }
           same += label;
           break;
         case 6:
-          handStr = 7;
+          handStr = 7; // Five of a kind
           same += label;
           break;
       }
     }
     parsedHand += label;
   }
-
   return handStr;
 };
 
-const getHandRankings = (hands: CamelCardHand[]) => {
+const sortHandRankings = (hands: CamelCardHand[]) => {
   return hands.sort((a, b) => {
     let A: number = a.type;
     let B: number = b.type;
@@ -113,34 +117,21 @@ const getHandRankings = (hands: CamelCardHand[]) => {
 const getTotalWinnings = (handsRanked: CamelCardHand[]) => {
   let sum = 0;
   handsRanked.forEach(({ bid }, index) => {
-    console.log(
-      "bid and index",
-      bid,
-      "*",
-      index + 1,
-      "=",
-      bid * (index + 1),
-      "| sum",
-      sum
-    );
-
-    sum += bid * (index + 1);
+    sum = sum + bid * ++index;
   });
   return sum;
 };
 
-test("AoC 2023 day 7 example part 1", async () => {
-  const data = await getInputList(inputFile);
+test("AoC 2023 day 7 example from reddit part 1", async () => {
+  const data = await getInputList(exampleFileReddit);
   data.forEach((cc, index) => {
     const str = getHandType(cc.hand);
     data[index].type = str;
   });
 
-  const rankings = getHandRankings(data);
-
+  const rankings = sortHandRankings(data);
   const total = getTotalWinnings(rankings);
-  console.log("day 7 answer part 1 =", total);
-  // attempt 1 = 247943275 (too high)
+  expect(total).toBe(6592);
 });
 
 test("AoC 2023 day 7 example part 1", async () => {
@@ -151,11 +142,26 @@ test("AoC 2023 day 7 example part 1", async () => {
     data[index].type = str;
   });
 
-  const rankings = getHandRankings(data);
+  const rankings = sortHandRankings(data);
   expect(rankings[0].hand).toBe("32T3K");
   expect(rankings[1].hand).toBe("KTJJT");
   expect(rankings[2].hand).toBe("KK677");
   expect(rankings[3].hand).toBe("T55J5");
-  expect(rankings[4].hand).toBe("QQQJA");
+  expect(rankings[rankings.length - 1].hand).toBe("QQQJA");
   expect(getTotalWinnings(rankings)).toBe(6440);
+});
+
+test("AoC 2023 day 7 answer part 1", async () => {
+  const data = await getInputList(inputFile);
+  data.forEach((cc, index) => {
+    const str = getHandType(cc.hand);
+    data[index].type = str;
+  });
+
+  const rankings = sortHandRankings(data);
+
+  const total = getTotalWinnings(rankings);
+  console.log("day 7 answer part 1 =", total);
+  // attempt 1 = 247943275 (too high)
+  // answer =    247815719
 });
